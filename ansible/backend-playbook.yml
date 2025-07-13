@@ -1,0 +1,132 @@
+<<<<<<< HEAD
+---
+- name: Setup Backend Server
+  hosts: backend
+  become: yes
+  vars:
+    app_dir: /home/ec2-user/pokeapi-backend
+    
+  tasks:
+    - name: Wait for instance to be ready
+      wait_for_connection:
+        timeout: 300
+
+    - name: Install required packages
+      yum:
+        name:
+          - git
+          - docker
+          - python3-pip
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Clone repository
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ app_dir }}"
+        force: yes
+      become_user: ec2-user
+
+    - name: Build Docker image
+      docker_image:
+        name: pokeapi-backend
+        source: build
+        build:
+          path: "{{ app_dir }}/backend"
+      become_user: ec2-user
+
+    - name: Run backend container
+      docker_container:
+        name: pokeapi-backend
+        image: pokeapi-backend
+        state: started
+        restart_policy: always
+        ports:
+          - "5000:5000"
+        env:
+          AWS_DEFAULT_REGION: "{{ aws_region | default('us-west-2') }}"
+=======
+---
+- name: Setup Backend Server
+  hosts: backend
+  become: yes
+  vars:
+    app_dir: /home/ec2-user/pokeapi-backend
+    
+  tasks:
+    - name: Wait for instance to be ready
+      wait_for_connection:
+        timeout: 300
+
+    - name: Install required packages
+      yum:
+        name:
+          - git
+          - docker
+          - python3-pip
+        state: present
+
+    - name: Start and enable Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add ec2-user to docker group
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+
+    - name: Create app directory
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ec2-user
+        group: ec2-user
+
+    - name: Clone repository
+      git:
+        repo: "{{ github_repo }}"
+        dest: "{{ app_dir }}"
+        force: yes
+      become_user: ec2-user
+
+    - name: Build Docker image
+      docker_image:
+        name: pokeapi-backend
+        source: build
+        build:
+          path: "{{ app_dir }}/backend"
+      become_user: ec2-user
+
+    - name: Run backend container
+      docker_container:
+        name: pokeapi-backend
+        image: pokeapi-backend
+        state: started
+        restart_policy: always
+        ports:
+          - "5000:5000"
+        env:
+          AWS_DEFAULT_REGION: "{{ aws_region | default('us-west-2') }}"
+>>>>>>> 65e20a5 (Initial commit)
+      become_user: ec2-user
